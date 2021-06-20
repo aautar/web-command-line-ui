@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        
+        <title>Simple Example</title>
+
+        <style type="text/css">
+            * { margin:0; padding:0; border:none; font-family:Consolas, Monospace; font-size:15px;}
+            html, body { width:100%; height:100%; }
+            body { padding: 10px; box-sizing: border-box; }
+            input { color:#087AA7; margin-left:-1px; border:0 none; width:100%; outline:none; }
+            p { margin:3px 0px; }
+    
+            .output-message { margin:15px 15px; }
+            ul { margin-left: 25px; margin-right: 25px; }
+            ul li { list-style-type: disc; margin:15px 0px;}
+    
+            .tinytext { color:#888; font-size:12px; }
+    
+            .promptcolor { color:#878787; }
+            .prev-input { color:#087AA7; }
+    
+            .inputtable { margin-bottom: 15px;}
+        </style>        
+    </head>
+
+    <body>
+
+        <div id="console"></div>
+
+        <script type="module">
+            import {Shell} from '../src/Shell.mjs';
+
+	        const console = new Shell(   
+                document.getElementById("console"),
+                `<span class='promptcolor'>&gt;&gt;</span>&nbsp;`
+            );
+
+            console.writeLine(`◕_◕ A simple CLI example`);
+
+            // Define a command
+            const commandEcho = Object.create({});
+            commandEcho.match = function(_input) {
+                if(_input.startsWith('echo ')) {
+                    return true;
+                }
+
+                return false;
+            };
+
+            commandEcho.process = function(_inputData) { 
+                return [_inputData.substring(5)];
+            };
+
+            // Add the command to the console
+            console.addCommand(commandEcho);
+
+        </script>
+    </body>
+
+</html>
