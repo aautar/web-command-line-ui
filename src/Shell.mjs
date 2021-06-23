@@ -3,6 +3,11 @@ import {DOMHelper} from './DOMHelper.mjs'
 function Shell(_shellContainer, _promptMarkup) {
     const self = this;
 
+    const componentId = `c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
+
+    // need to generate dynamically
+    const instanceId = `i-fbe38596-2910-4448-bc2a-9b4af7a56891`;
+
     const KEY_UP_ARROW = 38;
     const KEY_DOWN_ARROW = 40;
 
@@ -11,18 +16,25 @@ function Shell(_shellContainer, _promptMarkup) {
     let commandBufferLookbackIndex = 0;
     let currentCommandEntry = '';
 
-    const renderInitial = function() {
+    const renderComponentStyles = function() {
+        const styles = `
+            .${componentId}-output { cursor:default; }
+        `.trim();
+
+        DOMHelper.appendHTML(document.head, `<style style="text/css">${styles}</style>`);
+    };
+
+    const renderComponentElements = function() {
         var markup = `
             <div>
-                <div id="output" style="cursor:default;"></div>
-            
-                <div id="input">
-                    <form class="cmdline" onsubmit="return false;">
+                <div class="${componentId}-output"></div>
+                <div class="${componentId}-input">
+                    <form class="${componentId}-cmdline" onsubmit="return false;">
                         <table class="inputtable" border="0" cellspacing="0">
                             <tbody>
                                 <tr>
-                                    <td id="inputprompt">prompt:#&nbsp;</td>
-                                    <td style="width:100%;"><input id="inputcmd" autocomplete="off" type="text" /></td>
+                                    <td class="${componentId}-inputprompt">prompt:#&nbsp;</td>
+                                    <td style="width:100%;"><input class="${componentId}-inputcmd" autocomplete="off" type="text" /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -30,13 +42,13 @@ function Shell(_shellContainer, _promptMarkup) {
                     </form>
                 </div>
                 
-                <div id="input-password" style="display:none;">
-                    <form class="cmdline" onsubmit="return false;">
+                <div class="${componentId}-input-password" style="display:none;">
+                    <form class="${componentId}-cmdline-password" onsubmit="return false;">
                         <table class="inputtable" border="0" cellspacing="0">
                             <tbody>
                                 <tr>
-                                    <td id="inputpassprompt">password:#&nbsp;</td>
-                                    <td style="width:100%;"><input id="inputpass" autocomplete="off" type="password" /></td>
+                                    <td class="${componentId}-inputpassprompt">password:#&nbsp;</td>
+                                    <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="password" /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -48,12 +60,14 @@ function Shell(_shellContainer, _promptMarkup) {
         return DOMHelper.appendHTML(_shellContainer, markup);
     };
 
-    const shellElement = renderInitial();
-    const _promptContainer = shellElement.querySelector('#input');
-    const _inputForm = _promptContainer.querySelector('form.cmdline');
-    const _promptElement = _promptContainer.querySelector('#inputprompt');
-    const _inputContainer = _promptContainer.querySelector('#inputcmd');
-    const _outputContainer = shellElement.querySelector('#output');
+    renderComponentStyles();
+    const shellElement = renderComponentElements();
+
+    const _promptContainer = shellElement.querySelector(`.${componentId}-input`);
+    const _inputForm = _promptContainer.querySelector(`.${componentId}-cmdline`);
+    const _promptElement = _promptContainer.querySelector(`.${componentId}-inputprompt`);
+    const _inputContainer = _promptContainer.querySelector(`.${componentId}-inputcmd`);
+    const _outputContainer = shellElement.querySelector(`.${componentId}-output`);
 
     const putFocusOnInput = function() {
         _inputContainer.focus();
