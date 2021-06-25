@@ -3,10 +3,10 @@ import {DOMHelper} from './DOMHelper.mjs'
 function Shell(_shellContainer, _promptMarkup) {
     const self = this;
 
-    const componentId = `c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
+    const componentId = `c-web-command-line-ui-shell-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
 
     // need to generate dynamically
-    const instanceId = `i-fbe38596-2910-4448-bc2a-9b4af7a56891`;
+    const instanceId = `i-web-command-line-ui-shell-fbe38596-2910-4448-bc2a-9b4af7a56891`;
 
     const KEY_UP_ARROW = 38;
     const KEY_DOWN_ARROW = 40;
@@ -17,16 +17,27 @@ function Shell(_shellContainer, _promptMarkup) {
     let currentCommandEntry = '';
 
     const renderComponentStyles = function() {
+        const existingStyleElem = document.querySelector('style#c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2');
+        if(existingStyleElem !== null) {
+            return;
+        }
+
         const styles = `
+            .${componentId} input { color:#087AA7; margin-left:-1px; border:0 none; width:100%; outline:none; }
+            .${componentId} p { margin:3px 0px; }
             .${componentId}-output { cursor:default; }
+            .${componentId} .inputtable { margin-bottom: 15px; }
+            .${componentId} .promptcolor { color:#878787; }
+            .${componentId} .prev-input { color:#087AA7; }
+            .${componentId} .output-message { margin:15px 15px; }
         `.trim();
 
-        DOMHelper.appendHTML(document.head, `<style style="text/css">${styles}</style>`);
+        DOMHelper.appendHTML(document.head, `<style id="${componentId}" style="text/css">${styles}</style>`);
     };
 
     const renderComponentElements = function() {
         var markup = `
-            <div>
+            <div class="${componentId} ${instanceId}">
                 <div class="${componentId}-output"></div>
                 <div class="${componentId}-input">
                     <form class="${componentId}-cmdline" onsubmit="return false;">
@@ -169,6 +180,14 @@ function Shell(_shellContainer, _promptMarkup) {
 
         DOMHelper.replaceHTML(_promptElement, _promptMarkup);
         putFocusOnInput();
+    };
+
+    /**
+     * 
+     * @returns {String}
+     */
+    this.getComponentId = function() {
+        return componentId;
     };
 
     /**
