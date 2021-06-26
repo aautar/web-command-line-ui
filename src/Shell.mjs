@@ -113,7 +113,7 @@ function Shell(_shellContainer, _promptMarkup) {
         commandBufferLookbackIndex = 0; // reset
         currentCommandEntry = '';
 
-        self.writeLine(`<p class="prev-input">${_promptMarkup}${ln}</p>`);
+        DOMHelper.appendHTML(_outputContainer, `<p class="prev-input">${_promptMarkup}${ln}</p>`);
 
         clearInputLine();
         hidePrompt();
