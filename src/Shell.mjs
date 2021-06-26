@@ -1,9 +1,9 @@
 import {DOMHelper} from './DOMHelper.mjs'
 
+const componentId = `c-web-command-line-ui-shell-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
+
 function Shell(_shellContainer, _promptMarkup) {
     const self = this;
-
-    const componentId = `c-web-command-line-ui-shell-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
 
     // need to generate dynamically
     const instanceId = `i-web-command-line-ui-shell-fbe38596-2910-4448-bc2a-9b4af7a56891`;
@@ -23,7 +23,7 @@ function Shell(_shellContainer, _promptMarkup) {
         }
 
         const styles = `
-            .${componentId} input { color:#087AA7; margin-left:-1px; border:0 none; width:100%; outline:none; }
+            .${componentId} input { background-color:transparent; color:#087AA7; margin-left:-1px; border:0 none; width:100%; outline:none; }
             .${componentId} p { margin:3px 0px; }
             .${componentId}-output { cursor:default; }
             .${componentId} .inputtable { margin-bottom: 15px; }
@@ -198,11 +198,18 @@ function Shell(_shellContainer, _promptMarkup) {
         DOMHelper.appendHTML(_outputContainer, `<p class="output-message">${_txt}</p>`);
     };
 
+    this.writeBlock = function(_txt, _x) {
+
+    };
+
     this.addCommand = function(_command) {
         commands.push(_command);
     };
 
     bindKeys();
 };
+
+// expose componentId
+Shell.componentId = componentId;
 
 export { Shell }
