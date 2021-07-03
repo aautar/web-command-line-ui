@@ -9,4 +9,3 @@ test('getComponentId returns correct component ID', t => {
     const actualComponentId = Shell.componentId;    
 	t.true(actualComponentId === expectedComponentId);
 });
-

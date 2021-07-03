@@ -2,6 +2,14 @@ import {DOMHelper} from './DOMHelper.mjs'
 
 const componentId = `c-web-command-line-ui-shell-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
 
+// From https://stackoverflow.com/a/2117523
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+};
+
 /**
  * 
  * @param {Element} _shellContainer 
@@ -11,7 +19,7 @@ function Shell(_shellContainer, _promptString) {
     const self = this;
 
     // need to generate dynamically
-    const instanceId = `i-web-command-line-ui-shell-fbe38596-2910-4448-bc2a-9b4af7a56891`;
+    const instanceId = `i-web-command-line-ui-shell-${uuidv4()}`;
 
     const KEY_UP_ARROW = 38;
     const KEY_DOWN_ARROW = 40;
