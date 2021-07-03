@@ -1,0 +1,25 @@
+{
+  "name": "web-command-line-ui",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aautar/web-command-line-ui.git"
+  },
+  "author": "Avishkar Autar <aautar@digital-radiation.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aautar/web-command-line-ui/issues"
+  },
+  "homepage": "https://github.com/aautar/web-command-line-ui#readme",
+  "devDependencies": {
+    "ava": "^3.15.0"
+  }
+}
