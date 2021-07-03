@@ -15,11 +15,7 @@
             import {Shell} from '../src/Shell.mjs';
 
             window.document.addEventListener('DOMContentLoaded', (e) => {
-                const console = new Shell(   
-                    document.getElementById("console"),
-                    `<span class='promptcolor'>&gt;&gt;</span>&nbsp;`
-                );
-
+                const console = new Shell(document.getElementById("console"), `>>`);
                 console.writeLine(`◕_◕ A simple CLI example`);
 
                 // Define a command

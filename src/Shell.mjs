@@ -2,7 +2,12 @@ import {DOMHelper} from './DOMHelper.mjs'
 
 const componentId = `c-web-command-line-ui-shell-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2`;
 
-function Shell(_shellContainer, _promptMarkup) {
+/**
+ * 
+ * @param {Element} _shellContainer 
+ * @param {String} _promptString 
+ */
+function Shell(_shellContainer, _promptString) {
     const self = this;
 
     // need to generate dynamically
@@ -11,6 +16,7 @@ function Shell(_shellContainer, _promptMarkup) {
     const KEY_UP_ARROW = 38;
     const KEY_DOWN_ARROW = 40;
 
+    const promptMarkup = `<span class='promptcolor'>${DOMHelper.escapeHtml(_promptString)}</span>&nbsp;`;
     const commands = [];
     const commandBuffer = [];
     let commandBufferLookbackIndex = 0;
@@ -113,7 +119,7 @@ function Shell(_shellContainer, _promptMarkup) {
         commandBufferLookbackIndex = 0; // reset
         currentCommandEntry = '';
 
-        DOMHelper.appendHTML(_outputContainer, `<p class="prev-input">${_promptMarkup}${ln}</p>`);
+        DOMHelper.appendHTML(_outputContainer, `<p class="prev-input">${promptMarkup}${ln}</p>`);
 
         clearInputLine();
         hidePrompt();
@@ -178,7 +184,7 @@ function Shell(_shellContainer, _promptMarkup) {
             }
         });
 
-        DOMHelper.replaceHTML(_promptElement, _promptMarkup);
+        DOMHelper.replaceHTML(_promptElement, promptMarkup);
         putFocusOnInput();
     };
 

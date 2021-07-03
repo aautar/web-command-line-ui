@@ -19,7 +19,17 @@ const DOMHelper = {
     replaceHTML: function(_parentElement, _childElementHtml) {
         _parentElement.innerHTML = "";
         DOMHelper.appendHTML(_parentElement, _childElementHtml);
-    },    
+    },
+
+    escapeHtml: function(unsafe) {
+        // from https://stackoverflow.com/a/6234804
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+     }
 };
 
 export { DOMHelper }
