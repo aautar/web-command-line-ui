@@ -5,7 +5,7 @@ Frontend component to create a basic command line interface
 ## Creating an interface
 To create a new interface, use the `Shell` constructor, e.g.
 
-```
+```javascript
 const console = new Shell(
     document.getElementById("console"), // parent DOM element
     `>>`                                // prompt
@@ -15,7 +15,7 @@ const console = new Shell(
 ## Programatically writing a line
 Use the Shell.writeLine method to write a line, e.g.
 
-```
+```javascript
 console.writeLine(`◕_◕ A simple CLI example`);
 ```
 
@@ -27,7 +27,7 @@ Command are expected to be [objects](https://developer.mozilla.org/en-US/docs/We
 
 Command objects are added to an instance of `Shell` via the `addCommand` method. For example, the following shows how to add a simple "echo" command, which will simply print out what is passed in:
 
-```
+```javascript
 // Create the the command object
 const commandEcho = Object.create({});
 
