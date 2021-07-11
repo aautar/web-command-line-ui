@@ -15,8 +15,8 @@
             import {Shell} from '../src/Shell.mjs';
 
             window.document.addEventListener('DOMContentLoaded', (e) => {
-                const console = new Shell(document.getElementById("console"), `>>`);
-                console.writeLine(`◕_◕ A simple CLI example`);
+                const shell = new Shell(document.getElementById("shell"), `>>`);
+                shell.writeLine(`◕_◕ A simple CLI example`);
 
                 // Define a command
                 const commandEcho = Object.create({});
@@ -32,15 +32,15 @@
                     return [_inputData.substring(5)];
                 };
 
-                // Add the command to the console
-                console.addCommand(commandEcho);
+                // Add the command to the shell
+                shell.addCommand(commandEcho);
             });
         </script>
 
     </head>
 
     <body>
-        <div id="console"></div>
+        <div id="shell"></div>
     </body>
 
 </html>
