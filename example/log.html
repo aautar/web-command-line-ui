@@ -16,32 +16,33 @@
 
             window.document.addEventListener('DOMContentLoaded', (e) => {
                 const shell = new Shell(document.getElementById("shell"), `>>`);
-                shell.writeLine(`◕_◕ A simple CLI example (dark mode)`);
+                shell.writeLine(`◕_◕ Example of a log stream`);
+
+                let i = 0;
+                const intv = setInterval(() => {
+                    shell.writeBlock(
+                        `ll-${i}`, 
+                        `Log line ${i}`, 
+                        (_id) => { 
+                            return `<code>{<br>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#c09003;">"messageID"</span>: <span style="color:#c09003;">"Log line ${_id}"</span><br>}</code>`;
+                        }
+                    );
+
+                    i++;
+
+                    if(i > 100) {
+                        clearInterval(intv);
+                    }
+
+                }, 100);
 
                 const overrideStyles = `
                     .${Shell.componentId} .output-block { color:#aaa; }
-                    .${Shell.componentId} .output-block:hover { background-color:#353535; }
                 `;
 
                 shell.setComponentStyleOverrides(overrideStyles);
-
-                // Define a command
-                const commandEcho = Object.create({});
-                commandEcho.match = function(_input) {
-                    if(_input.startsWith('echo ')) {
-                        return true;
-                    }
-
-                    return false;
-                };
-
-                commandEcho.process = function(_inputData) { 
-                    return [_inputData.substring(5)];
-                };
-
-                // Add the command to the shell
-                shell.addCommand(commandEcho);
             });
+
         </script>
 
     </head>

@@ -17,8 +17,6 @@ function uuidv4() {
  */
 function Shell(_shellContainer, _promptString) {
     const self = this;
-
-    // need to generate dynamically
     const instanceId = `i-web-command-line-ui-shell-${uuidv4()}`;
 
     const KEY_UP_ARROW = 38;
@@ -33,17 +31,25 @@ function Shell(_shellContainer, _promptString) {
     const renderComponentStyles = function() {
         const existingStyleElem = document.querySelector('style#c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2');
         if(existingStyleElem !== null) {
-            return;
+            document.removeChild(existingStyleElem);
         }
 
         const styles = `
-            .${componentId} input { background-color:transparent; color:#087AA7; margin-left:-1px; border:0 none; width:100%; outline:none; }
-            .${componentId} p { margin:3px 0px; }
-            .${componentId}-output { cursor:default; }
+            .${componentId}-output { cursor:default; padding:5px 5px 0px 0px; }
+            .${componentId} .hide { display:none; }
+            .${componentId} .line { padding:2px 0; margin:0; }
+            .${componentId} input { background-color:transparent; color:#087AA7; margin:0; border:0 none; width:100%; outline:none; }
             .${componentId} .inputtable { margin-bottom: 15px; }
             .${componentId} .promptcolor { color:#878787; }
             .${componentId} .prev-input { color:#087AA7; }
-            .${componentId} .output-message { margin:15px 15px; }
+            .${componentId} .output-block { color:#000; }
+            .${componentId} .output-block-expandable { }
+            .${componentId} .output-block-expandable:hover { background-color:#353535; }
+            .${componentId} .block-expanded-content { border-left:2px solid #6c6c6c; padding:0px 6px 0 6px; margin:4px 0 0 0; }
+
+            /* overrides / additions to default styles */
+            ${overrideStyles}
+
         `.trim();
 
         DOMHelper.appendHTML(document.head, `<style id="${componentId}" style="text/css">${styles}</style>`);
@@ -53,7 +59,7 @@ function Shell(_shellContainer, _promptString) {
         var markup = `
             <div class="${componentId} ${instanceId}">
                 <div class="${componentId}-output"></div>
-                <div class="${componentId}-input">
+                <div class="${componentId}-input line">
                     <form class="${componentId}-cmdline" onsubmit="return false;">
                         <table class="inputtable" border="0" cellspacing="0">
                             <tbody>
@@ -85,7 +91,6 @@ function Shell(_shellContainer, _promptString) {
         return DOMHelper.appendHTML(_shellContainer, markup);
     };
 
-    renderComponentStyles();
     const shellElement = renderComponentElements();
 
     const _promptContainer = shellElement.querySelector(`.${componentId}-input`);
@@ -93,6 +98,12 @@ function Shell(_shellContainer, _promptString) {
     const _promptElement = _promptContainer.querySelector(`.${componentId}-inputprompt`);
     const _inputContainer = _promptContainer.querySelector(`.${componentId}-inputcmd`);
     const _outputContainer = shellElement.querySelector(`.${componentId}-output`);
+
+    const outputBlockClass = 'output-block';
+
+    let maxOutputBlocks = 50;
+    let hasPausedAutoscroll = false;
+    let overrideStyles = "";
 
     const putFocusOnInput = function() {
         _inputContainer.focus();
@@ -127,7 +138,7 @@ function Shell(_shellContainer, _promptString) {
         commandBufferLookbackIndex = 0; // reset
         currentCommandEntry = '';
 
-        DOMHelper.appendHTML(_outputContainer, `<p class="prev-input">${promptMarkup}${ln}</p>`);
+        DOMHelper.appendHTML(_outputContainer, `<p class="prev-input line">${promptMarkup}${ln}</p>`);
 
         clearInputLine();
         hidePrompt();
@@ -185,7 +196,12 @@ function Shell(_shellContainer, _promptString) {
             processCommandInput();
         });
 
-        window.addEventListener('click', function(event) {
+        window.addEventListener('click', function(e) {
+            const parentBlockEl = e.target.closest(`.${outputBlockClass}`);
+            if(parentBlockEl) {
+                return;
+            }
+
             // If we haven't selected anything, put focus back on the input prompt
             if(window.getSelection().toString().length <= 0) {
                 putFocusOnInput();
@@ -194,6 +210,32 @@ function Shell(_shellContainer, _promptString) {
 
         DOMHelper.replaceHTML(_promptElement, promptMarkup);
         putFocusOnInput();
+    };
+
+    const bindScrollHandler = function() {
+        document.addEventListener("scroll", (e) => {
+            const maxScrollY = _outputContainer.offsetHeight - window.innerHeight;
+
+            //console.log(`window.scrollY = ${window.scrollY}`);
+            //console.log(`maxScrollY = ${maxScrollY}`);
+
+            if(window.scrollY < maxScrollY) {
+                hasPausedAutoscroll = true;
+            } else {
+                hasPausedAutoscroll = false;
+            }
+        });
+    };
+
+    const scrollToLastOutput = function() {
+        _outputContainer.scrollIntoView({ behavior: "instant", block: "end", inline: "nearest" });
+    };
+
+    const limitToMaxLines = function() {
+        const numOutputMessages = _outputContainer.querySelectorAll(`.${outputBlockClass}`).length;
+        if(numOutputMessages > maxOutputBlocks) {
+            _outputContainer.querySelector(`.${outputBlockClass}:first-of-type`).remove();
+        }
     };
 
     /**
@@ -209,18 +251,79 @@ function Shell(_shellContainer, _promptString) {
      * @param {String} _txt 
      */
     this.writeLine = function(_txt) {
-        DOMHelper.appendHTML(_outputContainer, `<p class="output-message">${_txt}</p>`);
+        DOMHelper.appendHTML(_outputContainer, `<div class="${outputBlockClass} line">${_txt}</div>`);
+        limitToMaxLines();
+
+        if(!hasPausedAutoscroll) {
+            scrollToLastOutput();
+        }
     };
 
-    this.writeBlock = function(_txt, _x) {
+    /**
+     * 
+     * @param {String} _linePreviewTxt 
+     * @param {*} _onExpansion 
+     */
+    this.writeBlock = function(_id, _linePreviewTxt, _onExpansion) {
+        const blockContent = `
+            <div class="${outputBlockClass} output-block-expandable line">
+                <div>${_linePreviewTxt}</div>
+                <div class="block-expanded-content hide">test</div>
+            </div>
+        `;
 
+        const el = DOMHelper.appendHTML(_outputContainer, blockContent);
+        el.addEventListener("click", function(e) {
+            e.preventDefault();
+
+            const parentBlockEl = e.target.closest(`.${outputBlockClass}`);
+            const expandedContentEl = (parentBlockEl.getElementsByClassName('block-expanded-content'))[0];
+
+            if(expandedContentEl.classList.contains('hide')) {
+                expandedContentEl.innerHTML = _onExpansion(_id);
+                expandedContentEl.classList.remove('hide');
+            } else {
+                expandedContentEl.classList.add('hide');
+                expandedContentEl.innerHTML = '';
+            }
+
+        });
+
+        limitToMaxLines();
+
+        if(!hasPausedAutoscroll) {
+            scrollToLastOutput();
+        }
     };
 
+    /**
+     * 
+     * @param {Object} _command 
+     */
     this.addCommand = function(_command) {
         commands.push(_command);
     };
 
+    /**
+     * 
+     * @param {Number} _max 
+     */
+    this.setMaxOutputBlocks = function(_max) {
+        maxOutputBlocks = _max;
+    };
+
+    /**
+     * 
+     * @param {String} _cssStr 
+     */
+    this.setComponentStyleOverrides = function(_cssStr) {
+        overrideStyles = _cssStr;
+        renderComponentStyles();
+    };
+
     bindKeys();
+    bindScrollHandler();
+    renderComponentStyles();
 };
 
 // expose componentId
