@@ -28,6 +28,10 @@ function Shell(_shellContainer, _promptString) {
     let commandBufferLookbackIndex = 0;
     let currentCommandEntry = '';
 
+    let promptTextColor = '#878787';
+    let outputTextColor = '#000';
+    let outputBlockHoverBackgroundColor = '#353535';
+
     const renderComponentStyles = function() {
         const existingStyleElem = document.querySelector('style#c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2');
         if(existingStyleElem !== null) {
@@ -38,13 +42,13 @@ function Shell(_shellContainer, _promptString) {
             .${componentId}-output { cursor:default; padding:5px 5px 0px 0px; }
             .${componentId} .hide { display:none; }
             .${componentId} .line { padding:2px 0; margin:0; }
-            .${componentId} input { background-color:transparent; color:#087AA7; margin:0; border:0 none; width:100%; outline:none; }
+            .${componentId} input { background-color:transparent; color:${promptTextColor}; margin:0; border:0 none; width:100%; outline:none; }
             .${componentId} .inputtable { margin-bottom: 15px; }
-            .${componentId} .promptcolor { color:#878787; }
-            .${componentId} .prev-input { color:#087AA7; }
-            .${componentId} .output-block { color:#000; }
+            .${componentId} .promptcolor { color:${promptTextColor}; }
+            .${componentId} .prev-input { color:${promptTextColor}; }
+            .${componentId} .output-block { color:${outputTextColor}; }
             .${componentId} .output-block-expandable { }
-            .${componentId} .output-block-expandable:hover { background-color:#353535; }
+            .${componentId} .output-block-expandable:hover { background-color:${outputBlockHoverBackgroundColor}; }
             .${componentId} .block-expanded-content { border-left:2px solid #6c6c6c; padding:0px 6px 0 6px; margin:4px 0 0 0; }
 
             /* overrides / additions to default styles */
@@ -310,6 +314,33 @@ function Shell(_shellContainer, _promptString) {
      */
     this.setMaxOutputBlocks = function(_max) {
         maxOutputBlocks = _max;
+    };
+
+    /**
+     * 
+     * @param {String} _color 
+     */
+    this.setPromptTextColor = function(_color) {
+        promptTextColor = _color;
+        renderComponentStyles();
+    };
+
+    /**
+     * 
+     * @param {String} _color 
+     */
+    this.setOutputTextColor = function(_color) {
+        outputTextColor = _color;
+        renderComponentStyles();
+    };
+
+    /**
+     * 
+     * @param {String} _backgroundColor 
+     */
+    this.setOutputBlockHoverBackgroundColor = function(_backgroundColor) {
+        outputBlockHoverBackgroundColor = _backgroundColor;
+        renderComponentStyles();
     };
 
     /**

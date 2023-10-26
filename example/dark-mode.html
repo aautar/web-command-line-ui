@@ -16,14 +16,10 @@
 
             window.document.addEventListener('DOMContentLoaded', (e) => {
                 const shell = new Shell(document.getElementById("shell"), `>>`);
+                shell.setOutputTextColor('#aaa');
+                shell.setOutputBlockHoverBackgroundColor('#353535');
+                
                 shell.writeLine(`◕_◕ A simple CLI example (dark mode)`);
-
-                const overrideStyles = `
-                    .${Shell.componentId} .output-block { color:#aaa; }
-                    .${Shell.componentId} .output-block:hover { background-color:#353535; }
-                `;
-
-                shell.setComponentStyleOverrides(overrideStyles);
 
                 // Define a command
                 const commandEcho = Object.create({});
