@@ -35,6 +35,7 @@ jobs:
           echo $RELEASE_VERSION
           echo ${{ steps.vars.outputs.tag }}
       - run: npm ci
+      - run: npm run build
       - run: npm --no-git-tag-version version ${{ steps.vars.outputs.tag }}
       - run: npm publish
         env:
