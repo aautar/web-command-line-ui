@@ -35,7 +35,7 @@ jobs:
           echo $RELEASE_VERSION
           echo ${{ steps.vars.outputs.tag }}
       - run: npm ci
-      - run: npm version ${{ steps.vars.outputs.tag }}
+      - run: npm --no-git-tag-version version ${{ steps.vars.outputs.tag }}
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
