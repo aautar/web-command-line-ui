@@ -18,6 +18,8 @@
                 const shell = new Shell(document.getElementById("shell"), `>>`);
                 shell.setOutputTextColor('#aaa');
                 shell.setPromptTextColor('#087AA7');
+
+                shell.setMaxOutputBlocks(5000);
                 
                 shell.writeLine(`◕_◕ Example of a log stream`);
 

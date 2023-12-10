@@ -232,7 +232,7 @@ function Shell(_shellContainer, _promptString) {
     };
 
     const scrollToLastOutput = function() {
-        _outputContainer.scrollIntoView({ behavior: "instant", block: "end", inline: "nearest" });
+        shellElement.scrollIntoView({ behavior: "instant", block: "end", inline: "nearest" });
     };
 
     const limitToMaxLines = function() {
