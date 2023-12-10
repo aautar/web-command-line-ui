@@ -31,11 +31,14 @@ function Shell(_shellContainer, _promptString) {
     let promptTextColor = '#878787';
     let outputTextColor = '#000';
     let outputBlockHoverBackgroundColor = '#353535';
+    let outputTextWrapStyle = '';
+
+    const outputBlockClass = 'output-block';
 
     const renderComponentStyles = function() {
-        const existingStyleElem = document.querySelector('style#c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2');
+        const existingStyleElem = document.querySelector(`style#${componentId}`);
         if(existingStyleElem !== null) {
-            document.removeChild(existingStyleElem);
+            document.head.removeChild(existingStyleElem);
         }
 
         const styles = `
@@ -46,7 +49,8 @@ function Shell(_shellContainer, _promptString) {
             .${componentId} .inputtable { margin-bottom: 15px; }
             .${componentId} .promptcolor { color:${promptTextColor}; }
             .${componentId} .prev-input { color:${promptTextColor}; }
-            .${componentId} .output-block { color:${outputTextColor}; }
+            .${componentId} .${outputBlockClass} { color:${outputTextColor}; }
+            .${componentId} .${outputBlockClass} .summary { ${outputTextWrapStyle} }
             .${componentId} .output-block-expandable { }
             .${componentId} .output-block-expandable:hover { background-color:${outputBlockHoverBackgroundColor}; }
             .${componentId} .block-expanded-content { border-left:2px solid #6c6c6c; padding:0px 6px 0 6px; margin:4px 0 0 0; }
@@ -103,7 +107,6 @@ function Shell(_shellContainer, _promptString) {
     const _inputContainer = _promptContainer.querySelector(`.${componentId}-inputcmd`);
     const _outputContainer = shellElement.querySelector(`.${componentId}-output`);
 
-    const outputBlockClass = 'output-block';
 
     let maxOutputBlocks = 50;
     let hasPausedAutoscroll = false;
@@ -271,7 +274,7 @@ function Shell(_shellContainer, _promptString) {
     this.writeBlock = function(_id, _linePreviewTxt, _onExpansion) {
         const blockContent = `
             <div class="${outputBlockClass} output-block-expandable line">
-                <div>${_linePreviewTxt}</div>
+                <div class="summary">${_linePreviewTxt}</div>
                 <div class="block-expanded-content hide">test</div>
             </div>
         `;
@@ -349,6 +352,20 @@ function Shell(_shellContainer, _promptString) {
      */
     this.setComponentStyleOverrides = function(_cssStr) {
         overrideStyles = _cssStr;
+        renderComponentStyles();
+    };
+
+    /**
+     * 
+     * @param {Boolean} _wrapText 
+     */
+    this.setOutputTextWrap = function(_wrapText) {
+        if(_wrapText) {
+            outputTextWrapStyle = '';            
+        } else {
+            outputTextWrapStyle = `white-space: nowrap; text-overflow: ellipsis; overflow: hidden;`;
+        }
+        
         renderComponentStyles();
     };
 
