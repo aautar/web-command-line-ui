@@ -47,6 +47,7 @@ function Shell(_shellContainer, _promptString) {
             .${componentId} .line { padding:2px 0; margin:0; }
             .${componentId} input { background-color:transparent; color:${promptTextColor}; margin:0; border:0 none; width:100%; outline:none; }
             .${componentId} .inputtable { margin-bottom: 15px; }
+            .${componentId}-inputtextprompt, .${componentId}-inputpassprompt { text-wrap:nowrap; }
             .${componentId} .promptcolor { color:${promptTextColor}; }
             .${componentId} .prev-input { color:${promptTextColor}; }
             .${componentId} .${outputBlockClass} { color:${outputTextColor}; }
@@ -74,20 +75,6 @@ function Shell(_shellContainer, _promptString) {
                                 <tr>
                                     <td class="${componentId}-inputprompt">prompt:#&nbsp;</td>
                                     <td style="width:100%;"><input class="${componentId}-inputcmd" autocomplete="off" type="text" /></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                
-                    </form>
-                </div>
-                
-                <div class="${componentId}-input-password" style="display:none;">
-                    <form class="${componentId}-cmdline-password" onsubmit="return false;">
-                        <table class="inputtable" border="0" cellspacing="0">
-                            <tbody>
-                                <tr>
-                                    <td class="${componentId}-inputpassprompt">password:#&nbsp;</td>
-                                    <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="password" /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -136,7 +123,21 @@ function Shell(_shellContainer, _promptString) {
         _promptContainer.style.display = 'block';
     };
 
-    const processCommandInput = function() {
+    /**
+     * Generate an object that serves as an interface for consumers that need to read and write to the shell 
+     * while processing a command.
+     * 
+     * @returns {Object}
+     */
+    const generateCommandIntermediateIOInterface = function() {
+        return {
+            writeLine: self.writeLine,
+            writeBlock: self.writeBlock,
+            requestInput: self.requestInput,
+        };
+    };
+
+    const processCommandInput = async function() {
         const ln = fetchInputLine();
         if (ln.length <= 0)
             return;
@@ -150,21 +151,22 @@ function Shell(_shellContainer, _promptString) {
         clearInputLine();
         hidePrompt();
 
-        let foundMatch = false;
+        let foundMatchingCommand = null;
         commands.forEach((_command) => {
             if(!_command.match(ln)) {
                 return false;
             }
 
-            const output = _command.process(ln);
+            foundMatchingCommand = _command;
+            return true;
+        });
+
+        if(foundMatchingCommand !== null) {
+            const output = await foundMatchingCommand.process(ln, generateCommandIntermediateIOInterface());
             output.forEach((_outputLine) => {
                 self.writeLine(_outputLine);
             });
-
-            foundMatch = true;
-        });
-
-        if(!foundMatch) {
+        } else {
             self.writeLine(`¯\_(ツ)_/¯ Unrecognized input`);
         }
 
@@ -199,7 +201,7 @@ function Shell(_shellContainer, _promptString) {
             }
         });
 
-        _inputForm.addEventListener('submit', function () {
+        _inputForm.addEventListener('submit', async function () {
             processCommandInput();
         });
 
@@ -367,6 +369,67 @@ function Shell(_shellContainer, _promptString) {
         }
         
         renderComponentStyles();
+    };
+
+    /**
+     * 
+     * @param {String} _prompt 
+     * @param {Boolean} _isSecret 
+     * 
+     * @returns {Promise}
+     */
+    this.requestInput = function(_prompt, _isSecret) {
+        return new Promise((_resolve, _reject) => {
+            let markup = null;
+
+            if(_isSecret) {
+                markup = `
+                    <div class="${componentId}-input-password">
+                        <form class="${componentId}-cmdline-password" onsubmit="return false;">
+                            <table class="inputtable" border="0" cellspacing="0">
+                                <tbody>
+                                    <tr>
+                                        <td class="${componentId}-inputpassprompt">${_prompt}&nbsp;</td>
+                                        <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="password" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                `;
+            } else {
+                markup = `
+                    <div class="${componentId}-input-text">
+                        <form class="${componentId}-cmdline-text" onsubmit="return false;">
+                            <table class="inputtable" border="0" cellspacing="0">
+                                <tbody>
+                                    <tr>
+                                        <td class="${componentId}-inputtextprompt">${_prompt}&nbsp;</td>
+                                        <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="text" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                `;
+            }
+
+            const el = DOMHelper.appendHTML(_outputContainer, markup);
+            el.querySelector('input').focus();
+
+            el.querySelector('form').addEventListener('submit', function () {
+                const value = el.querySelector('input').value;
+                el.remove();
+
+                let displayValue = "•••";
+                if(!_isSecret) {
+                    displayValue = value;
+                }
+                self.writeLine(`${_prompt}&nbsp;${displayValue}`);
+
+                _resolve(value);
+            });
+        });
     };
 
     bindKeys();
