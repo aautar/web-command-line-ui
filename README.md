@@ -53,24 +53,37 @@ process(_line: String, _commandIntermediateIOInterface: Object): Promise
 
 ## Adding commands to a Shell
 
-Command objects are added to an instance of `Shell` via the `addCommand` method. For example, the following shows how to add a simple "echo" command, which will simply print out what is passed in:
+Command objects are added to an instance of `Shell` via the `addCommand` method. 
+
+The following shows how to add a simple "echo" command, which will simply print out what is passed in:
 
 ```javascript
-// Create the the command object
-const commandEcho = Object.create({});
+const commandEcho = {
+    /**
+     * Method to see if we have an "echo" command on the line
+     * 
+     * @param {String} _line 
+     * @returns {Boolean}
+     */
+    match: function(_line) {
+        if(_line.startsWith('/echo')) {
+            return true;
+        }
 
-// match method to see if we have an "echo" command on the line
-commandEcho.match = function(_input) {
-    if(_input.startsWith('echo ')) {
-        return true;
+        return false;
+    },
+
+    /**
+     * Method to strip away the "echo " prefix and return everything else on the line
+     * 
+     * @param {String} _line 
+     * @returns {Promise}
+     */
+    process: function(_line) {
+        return new Promise((_resolve, _reject) => {
+            _resolve([_line.substring(5)]);
+        });
     }
-
-    return false;
-};
-
-// process method to strip away the "echo " prefix and return everything else on the line
-commandEcho.process = function(_inputData) { 
-    return [_inputData.substring(5)];
 };
 
 // Add the command to the console
