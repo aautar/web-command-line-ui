@@ -14,28 +14,28 @@
         <script type="module">
             import {Shell} from '../src/Shell.mjs';
 
+            const commandEcho = {
+                match: function(_input) {
+                    if(_input.startsWith('/echo')) {
+                        return true;
+                    }
+
+                    return false;
+                },
+
+                process: function(_inputData) {
+                    return new Promise((_resolve, _reject) => {
+                        _resolve([_inputData.substring(5)]);
+                    });
+                }
+            };
+            
             window.document.addEventListener('DOMContentLoaded', (e) => {
                 const shell = new Shell(document.getElementById("shell"), `>>`);
                 shell.setOutputTextColor('#aaa');
                 shell.setOutputBlockHoverBackgroundColor('#353535');
                 
                 shell.writeLine(`◕_◕ A simple CLI example (dark mode)`);
-
-                // Define a command
-                const commandEcho = Object.create({});
-                commandEcho.match = function(_input) {
-                    if(_input.startsWith('echo ')) {
-                        return true;
-                    }
-
-                    return false;
-                };
-
-                commandEcho.process = function(_inputData) { 
-                    return [_inputData.substring(5)];
-                };
-
-                // Add the command to the shell
                 shell.addCommand(commandEcho);
             });
         </script>

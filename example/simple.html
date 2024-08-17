@@ -14,25 +14,28 @@
         <script type="module">
             import {Shell} from '../src/Shell.mjs';
 
-            window.document.addEventListener('DOMContentLoaded', (e) => {
-                const shell = new Shell(document.getElementById("shell"), `>>`);
-                shell.writeLine(`◕_◕ A simple CLI example`);
-
-                // Define a command
-                const commandEcho = Object.create({});
-                commandEcho.match = function(_input) {
-                    if(_input.startsWith('echo ')) {
+            // Define "/echo" command
+            const commandEcho = {
+                match: function(_input) {
+                    if(_input.startsWith('/echo')) {
                         return true;
                     }
 
                     return false;
-                };
+                },
 
-                commandEcho.process = function(_inputData) { 
-                    return [_inputData.substring(5)];
-                };
+                process: function(_inputData) {
+                    return new Promise((_resolve, _reject) => {
+                        _resolve([_inputData.substring(5)]);
+                    });
+                }
+            };
 
-                // Add the command to the shell
+            window.document.addEventListener('DOMContentLoaded', (e) => {
+                const shell = new Shell(document.getElementById("shell"), `>>`);
+                shell.writeLine(`◕_◕ A simple CLI example`);
+
+                // Add the "/echo" command to the shell
                 shell.addCommand(commandEcho);
             });
         </script>
