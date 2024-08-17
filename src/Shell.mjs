@@ -162,7 +162,16 @@ function Shell(_shellContainer, _promptString) {
         });
 
         if(foundMatchingCommand !== null) {
-            const output = await foundMatchingCommand.process(ln, generateCommandIntermediateIOInterface());
+            let output = [];
+
+            try {
+                output = await foundMatchingCommand.process(ln, generateCommandIntermediateIOInterface());
+            } catch(_err) {
+                if(Array.isArray(_err)) { // maybe should have a defined type for process result
+                    output = _err;
+                }
+            }
+
             output.forEach((_outputLine) => {
                 self.writeLine(_outputLine);
             });
