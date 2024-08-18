@@ -187,13 +187,15 @@ function Shell(_shellContainer, _promptString) {
     const bindKeys = function () {
         _inputContainer.addEventListener('keyup', function (e) {
             if (e.keyCode == KEY_UP_ARROW) {
-                commandBufferLookbackIndex++;
-                if (commandBufferLookbackIndex > commandBuffer.length) {
-                    commandBufferLookbackIndex = commandBuffer.length;
-                }
+                if(commandBuffer.length > 0) {
+                    e.preventDefault();
+                    commandBufferLookbackIndex++;
+                    if (commandBufferLookbackIndex > commandBuffer.length) {
+                        commandBufferLookbackIndex = commandBuffer.length;
+                    }
 
-                overwriteInputLine(commandBuffer[commandBuffer.length - commandBufferLookbackIndex]);
-                e.preventDefault();
+                    overwriteInputLine(commandBuffer[commandBuffer.length - commandBufferLookbackIndex]);
+                }
             }
             else if (e.keyCode == KEY_DOWN_ARROW) {
                 commandBufferLookbackIndex--;
