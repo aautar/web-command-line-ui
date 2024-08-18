@@ -62,23 +62,32 @@ var WebCommandLineUI = (function (exports) {
         let commandBufferLookbackIndex = 0;
         let currentCommandEntry = '';
 
+        let promptTextColor = '#878787';
+        let outputTextColor = '#000';
+        let outputBlockHoverBackgroundColor = '#353535';
+        let outputTextWrapStyle = '';
+
+        const outputBlockClass = 'output-block';
+
         const renderComponentStyles = function() {
-            const existingStyleElem = document.querySelector('style#c-8aad94b3-d0ab-42f1-ba32-2970ef9b7df2');
+            const existingStyleElem = document.querySelector(`style#${componentId}`);
             if(existingStyleElem !== null) {
-                document.removeChild(existingStyleElem);
+                document.head.removeChild(existingStyleElem);
             }
 
             const styles = `
             .${componentId}-output { cursor:default; padding:5px 5px 0px 0px; }
             .${componentId} .hide { display:none; }
             .${componentId} .line { padding:2px 0; margin:0; }
-            .${componentId} input { background-color:transparent; color:#087AA7; margin:0; border:0 none; width:100%; outline:none; }
+            .${componentId} input { background-color:transparent; color:${promptTextColor}; margin:0; border:0 none; width:100%; outline:none; }
             .${componentId} .inputtable { margin-bottom: 15px; }
-            .${componentId} .promptcolor { color:#878787; }
-            .${componentId} .prev-input { color:#087AA7; }
-            .${componentId} .output-block { color:#000; }
+            .${componentId}-inputtextprompt, .${componentId}-inputpassprompt { text-wrap:nowrap; }
+            .${componentId} .promptcolor { color:${promptTextColor}; }
+            .${componentId} .prev-input { color:${promptTextColor}; }
+            .${componentId} .${outputBlockClass} { color:${outputTextColor}; }
+            .${componentId} .${outputBlockClass} .summary { ${outputTextWrapStyle} }
             .${componentId} .output-block-expandable { }
-            .${componentId} .output-block-expandable:hover { background-color:#353535; }
+            .${componentId} .output-block-expandable:hover { background-color:${outputBlockHoverBackgroundColor}; }
             .${componentId} .block-expanded-content { border-left:2px solid #6c6c6c; padding:0px 6px 0 6px; margin:4px 0 0 0; }
 
             /* overrides / additions to default styles */
@@ -106,20 +115,6 @@ var WebCommandLineUI = (function (exports) {
                 
                     </form>
                 </div>
-                
-                <div class="${componentId}-input-password" style="display:none;">
-                    <form class="${componentId}-cmdline-password" onsubmit="return false;">
-                        <table class="inputtable" border="0" cellspacing="0">
-                            <tbody>
-                                <tr>
-                                    <td class="${componentId}-inputpassprompt">password:#&nbsp;</td>
-                                    <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="password" /></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                
-                    </form>
-                </div>
             </div>`;
 
             return DOMHelper.appendHTML(_shellContainer, markup);
@@ -133,7 +128,6 @@ var WebCommandLineUI = (function (exports) {
         const _inputContainer = _promptContainer.querySelector(`.${componentId}-inputcmd`);
         const _outputContainer = shellElement.querySelector(`.${componentId}-output`);
 
-        const outputBlockClass = 'output-block';
 
         let maxOutputBlocks = 50;
         let hasPausedAutoscroll = false;
@@ -163,7 +157,21 @@ var WebCommandLineUI = (function (exports) {
             _promptContainer.style.display = 'block';
         };
 
-        const processCommandInput = function() {
+        /**
+         * Generate an object that serves as an interface for consumers that need to read and write to the shell 
+         * while processing a command.
+         * 
+         * @returns {Object}
+         */
+        const generateCommandIntermediateIOInterface = function() {
+            return {
+                writeLine: self.writeLine,
+                writeBlock: self.writeBlock,
+                requestInput: self.requestInput,
+            };
+        };
+
+        const processCommandInput = async function() {
             const ln = fetchInputLine();
             if (ln.length <= 0)
                 return;
@@ -177,21 +185,31 @@ var WebCommandLineUI = (function (exports) {
             clearInputLine();
             hidePrompt();
 
-            let foundMatch = false;
+            let foundMatchingCommand = null;
             commands.forEach((_command) => {
                 if(!_command.match(ln)) {
                     return false;
                 }
 
-                const output = _command.process(ln);
+                foundMatchingCommand = _command;
+                return true;
+            });
+
+            if(foundMatchingCommand !== null) {
+                let output = [];
+
+                try {
+                    output = await foundMatchingCommand.process(ln, generateCommandIntermediateIOInterface());
+                } catch(_err) {
+                    if(Array.isArray(_err)) { // maybe should have a defined type for process result
+                        output = _err;
+                    }
+                }
+
                 output.forEach((_outputLine) => {
                     self.writeLine(_outputLine);
                 });
-
-                foundMatch = true;
-            });
-
-            if(!foundMatch) {
+            } else {
                 self.writeLine(`¯\_(ツ)_/¯ Unrecognized input`);
             }
 
@@ -226,7 +244,7 @@ var WebCommandLineUI = (function (exports) {
                 }
             });
 
-            _inputForm.addEventListener('submit', function () {
+            _inputForm.addEventListener('submit', async function () {
                 processCommandInput();
             });
 
@@ -262,7 +280,7 @@ var WebCommandLineUI = (function (exports) {
         };
 
         const scrollToLastOutput = function() {
-            _outputContainer.scrollIntoView({ behavior: "instant", block: "end", inline: "nearest" });
+            shellElement.scrollIntoView({ behavior: "instant", block: "end", inline: "nearest" });
         };
 
         const limitToMaxLines = function() {
@@ -301,7 +319,7 @@ var WebCommandLineUI = (function (exports) {
         this.writeBlock = function(_id, _linePreviewTxt, _onExpansion) {
             const blockContent = `
             <div class="${outputBlockClass} output-block-expandable line">
-                <div>${_linePreviewTxt}</div>
+                <div class="summary">${_linePreviewTxt}</div>
                 <div class="block-expanded-content hide">test</div>
             </div>
         `;
@@ -348,11 +366,113 @@ var WebCommandLineUI = (function (exports) {
 
         /**
          * 
+         * @param {String} _color 
+         */
+        this.setPromptTextColor = function(_color) {
+            promptTextColor = _color;
+            renderComponentStyles();
+        };
+
+        /**
+         * 
+         * @param {String} _color 
+         */
+        this.setOutputTextColor = function(_color) {
+            outputTextColor = _color;
+            renderComponentStyles();
+        };
+
+        /**
+         * 
+         * @param {String} _backgroundColor 
+         */
+        this.setOutputBlockHoverBackgroundColor = function(_backgroundColor) {
+            outputBlockHoverBackgroundColor = _backgroundColor;
+            renderComponentStyles();
+        };
+
+        /**
+         * 
          * @param {String} _cssStr 
          */
         this.setComponentStyleOverrides = function(_cssStr) {
             overrideStyles = _cssStr;
             renderComponentStyles();
+        };
+
+        /**
+         * 
+         * @param {Boolean} _wrapText 
+         */
+        this.setOutputTextWrap = function(_wrapText) {
+            if(_wrapText) {
+                outputTextWrapStyle = '';            
+            } else {
+                outputTextWrapStyle = `white-space: nowrap; text-overflow: ellipsis; overflow: hidden;`;
+            }
+            
+            renderComponentStyles();
+        };
+
+        /**
+         * 
+         * @param {String} _prompt 
+         * @param {Boolean} _isSecret 
+         * 
+         * @returns {Promise}
+         */
+        this.requestInput = function(_prompt, _isSecret) {
+            return new Promise((_resolve, _reject) => {
+                let markup = null;
+
+                if(_isSecret) {
+                    markup = `
+                    <div class="${componentId}-input-password">
+                        <form class="${componentId}-cmdline-password" onsubmit="return false;">
+                            <table class="inputtable" border="0" cellspacing="0">
+                                <tbody>
+                                    <tr>
+                                        <td class="${componentId}-inputpassprompt">${_prompt}&nbsp;</td>
+                                        <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="password" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                `;
+                } else {
+                    markup = `
+                    <div class="${componentId}-input-text">
+                        <form class="${componentId}-cmdline-text" onsubmit="return false;">
+                            <table class="inputtable" border="0" cellspacing="0">
+                                <tbody>
+                                    <tr>
+                                        <td class="${componentId}-inputtextprompt">${_prompt}&nbsp;</td>
+                                        <td style="width:100%;"><input class="${componentId}-inputpass" autocomplete="off" type="text" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                `;
+                }
+
+                const el = DOMHelper.appendHTML(_outputContainer, markup);
+                el.querySelector('input').focus();
+
+                el.querySelector('form').addEventListener('submit', function () {
+                    const value = el.querySelector('input').value;
+                    el.remove();
+
+                    let displayValue = "•••";
+                    if(!_isSecret) {
+                        displayValue = value;
+                    }
+                    self.writeLine(`${_prompt}&nbsp;${displayValue}`);
+
+                    _resolve(value);
+                });
+            });
         };
 
         bindKeys();

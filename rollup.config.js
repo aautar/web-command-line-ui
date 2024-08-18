@@ -7,7 +7,7 @@ const babelConfig = {
       '@babel/env', 
       {
         targets: {
-          "chrome": "41"
+          "chrome": "100"
         },       
         "corejs": "2",
         useBuiltIns: "usage"     
