@@ -22,7 +22,7 @@ console.writeLine(`◕_◕ A simple CLI example`);
 ## Defining commands
 Command are expected to be [objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object). To interface with the Shell, 2 methods must be defined on the object: `match()` and `process()`.
 
-### match
+### match()
 ```
 match(_line: String): Boolean
 ```
@@ -38,7 +38,7 @@ match(_line: String): Boolean
 Return `true`, if the line contains a command that that can be processed by the command object, `false` otherwise.
 
 
-### process
+### process()
 ```
 process(_line: String, _commandIntermediateIOInterface: Object): Promise
 ```
@@ -50,6 +50,10 @@ process(_line: String, _commandIntermediateIOInterface: Object): Promise
 - `_line`: the line entered by the user
 - `_commandIntermediateIOInterface`: an object containing methods to read or write from the shell while processing the given command. Shell methods should not be invoked directly while a command is being processed.
 
+#### Return values
+
+Return a `Promise`. 
+Both a resolved and rejected `Promise` is expected to return an array of strings, where each string is a line of output written to the shell.
 
 ## Adding commands to a Shell
 
@@ -88,4 +92,56 @@ const commandEcho = {
 
 // Add the command to the console
 console.addCommand(commandEcho);
+```
+
+## Requesting user input
+
+Commands can request and process input from the user within the command's `process()` method.
+The `_commandIntermediateIOInterface` argument provides an object with the `requestInput()` method, which may be called multiple times to request data from the user.
+
+
+### requestInput()
+```
+requestInput(_prompt: String, _isSecret: Boolean): Promise
+```
+
+`requestInput()` called to request user input.
+
+#### Arguments
+
+- `_prompt`: prompt indicating what is being requested from the user
+- `_isSecret`: flag indicating if the value entered is a secret or not; secrets are not displayed in the Shell
+
+#### Return values
+
+Return a `Promise`. 
+A resolved `Promise` will return a string with the value entered by the user
+
+### Example
+The following demonstrate the `process()` method for a "wait" command, which will:
+
+- As the user to enter a certain number of seconds
+- Print "tick" for every second that goes by
+- Resolve such that "finished." is displayed to the user when the given number of seconds has elapsed
+
+```javascript
+process: function(_inputData, _intermediateIOInterface) { 
+    return new Promise(async (_resolve, _reject) => {
+        const numSecStr = await _intermediateIOInterface.requestInput("Enter number of seconds:", false);
+        const numSec = Number.parseInt(numSecStr);
+
+        if(!Number.isInteger(numSec)) {
+            return _reject(["invalid input for command."]);
+        }
+
+        const intv = setInterval(() => {
+            _intermediateIOInterface.writeLine("tick..");
+        }, 1000);
+
+        setTimeout(() => {
+            clearInterval(intv);
+            _resolve(["finished."]);
+        }, numSec * 1000);
+    });
+}
 ```
