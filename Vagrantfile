@@ -1,32 +1,15 @@
 $provisioningScript = <<SCRIPT
 
-sudo apt-get install -y software-properties-common
-sudo add-apt-repository -y ppa:nginx/stable
-sudo apt-get -y update
-
-if ! [ -L /var/www ]; then
-  rm -rf /var/www
-  ln -fs /vagrant /var/www
-fi
+sudo apk update
+sudo apk upgrade
 
 # Install nginx
-sudo apt-get install -y nginx=1.16.*
+sudo apk add nginx
 
-# Nginx
-if [ ! -f /etc/nginx/sites-available/vagrant ]; then
-    touch /etc/nginx/sites-available/vagrant
-fi
-
-if [ -f /etc/nginx/sites-enabled/default ]; then
-    rm /etc/nginx/sites-enabled/default
-fi
-
-if [ ! -f /etc/nginx/sites-enabled/vagrant ]; then
-    ln -s /etc/nginx/sites-available/vagrant /etc/nginx/sites-enabled/vagrant
-fi
+sudo rm /etc/nginx/http.d/default.conf
 
 # Configure host
-cat << 'EOF' > /etc/nginx/sites-available/vagrant
+cat << 'EOF' > /etc/nginx/http.d/default.conf
 server
 {
     include mime.types;
@@ -46,8 +29,6 @@ server
 }
 EOF
 
-sudo sed -i 's/sendfile on;/sendfile off;/' /etc/nginx/nginx.conf
-
 SCRIPT
 
 $startScript = <<START_SCRIPT
@@ -55,7 +36,7 @@ sudo service nginx restart
 START_SCRIPT
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "boxen/alpine-3.19.0"
   config.vm.provision :shell, inline: $provisioningScript
   config.vm.provision "shell", inline: $startScript, run: "always"
   config.vm.network "private_network", type: "dhcp"
